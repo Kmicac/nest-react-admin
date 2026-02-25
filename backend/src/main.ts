@@ -15,8 +15,8 @@ async function createAdminOnFirstUse() {
     return;
   }
 
-  const defaultUsername = process.env.ADMIN_USERNAME || 'admin';
-  const defaultPassword = process.env.ADMIN_PASSWORD || 'admin123';
+  const defaultUsername = process.env.ADMIN_USERNAME;
+  const defaultPassword = process.env.ADMIN_PASSWORD;
 
   const existingAdmin = await User.findOne({
     where: { username: defaultUsername },
