@@ -3,17 +3,32 @@ import ContentQuery from '../models/content/ContentQuery';
 import CreateContentRequest from '../models/content/CreateContentRequest';
 import UpdateContentRequest from '../models/content/UpdateContentRequest';
 import apiService from './ApiService';
+import { PaginatedResponse } from './UserService';
 
 class ContentService {
   async findAll(
     courseId: string,
     contentQuery: ContentQuery,
-  ): Promise<Content[]> {
-    return (
-      await apiService.get<Content[]>(`/api/courses/${courseId}/contents`, {
-        params: contentQuery,
-      })
-    ).data;
+  ): Promise<PaginatedResponse<Content>> {
+    const response = await apiService.get<
+      Content[] | PaginatedResponse<Content>
+    >(`/api/courses/${courseId}/contents`, {
+      params: contentQuery,
+    });
+
+    if (Array.isArray(response.data)) {
+      return {
+        data: response.data,
+        total: response.data.length,
+      };
+    }
+
+    return {
+      data: response.data?.data ?? [],
+      total: response.data?.total ?? 0,
+      page: response.data?.page,
+      limit: response.data?.limit,
+    };
   }
 
   async save(

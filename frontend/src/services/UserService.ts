@@ -4,17 +4,39 @@ import User from '../models/user/User';
 import UserQuery from '../models/user/UserQuery';
 import apiService from './ApiService';
 
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page?: number;
+  limit?: number;
+}
+
 class UserService {
   async save(createUserRequest: CreateUserRequest): Promise<void> {
     await apiService.post('/api/users', createUserRequest);
   }
 
-  async findAll(userQuery: UserQuery): Promise<User[]> {
-    return (
-      await apiService.get<User[]>('/api/users', {
+  async findAll(userQuery: UserQuery): Promise<PaginatedResponse<User>> {
+    const response = await apiService.get<User[] | PaginatedResponse<User>>(
+      '/api/users',
+      {
         params: userQuery,
-      })
-    ).data;
+      },
+    );
+
+    if (Array.isArray(response.data)) {
+      return {
+        data: response.data,
+        total: response.data.length,
+      };
+    }
+
+    return {
+      data: response.data?.data ?? [],
+      total: response.data?.total ?? 0,
+      page: response.data?.page,
+      limit: response.data?.limit,
+    };
   }
 
   async findOne(id: string): Promise<User> {

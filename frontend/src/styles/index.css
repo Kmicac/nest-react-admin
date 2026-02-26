@@ -14,7 +14,8 @@
     --white-hover: #f2f2f2;
     --sidebar-button: #2f343c;
     --sidebar-button-hover: #3b424c;
-    --font-brand: 'Roboto', Helvetica, 'Helvetica Neue', 'Nunito Sans', sans-serif;
+    --font-brand: 'Roboto', Helvetica, 'Helvetica Neue', 'Nunito Sans',
+      sans-serif;
   }
 
   html,
@@ -74,7 +75,7 @@
   }
 
   .table-filter {
-    @apply flex flex-col lg:flex-row gap-5 rounded-lg p-3 shadow overflow-x-auto border;
+    @apply rounded-lg p-2.5 shadow border;
     background-color: var(--brand-header-background);
   }
 
