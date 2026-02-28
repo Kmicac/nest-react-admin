@@ -7,8 +7,11 @@ import {
   Post,
   Put,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import { JwtGuard } from '../auth/guards/jwt.guard';
@@ -24,6 +27,13 @@ import { Course } from './course.entity';
 import { CourseQuery } from './course.query';
 import { CourseService } from './course.service';
 
+type CourseImageFile = {
+  buffer: Buffer;
+  mimetype: string;
+  size: number;
+  originalname: string;
+};
+
 @Controller('courses')
 @ApiBearerAuth()
 @UseGuards(JwtGuard, RolesGuard)
@@ -36,8 +46,12 @@ export class CourseController {
 
   @Post()
   @Roles(Role.Admin, Role.Editor)
-  async save(@Body() createCourseDto: CreateCourseDto): Promise<Course> {
-    return await this.courseService.save(createCourseDto);
+  @UseInterceptors(FileInterceptor('image'))
+  async save(
+    @Body() createCourseDto: CreateCourseDto,
+    @UploadedFile() image?: CourseImageFile,
+  ): Promise<Course> {
+    return await this.courseService.save(createCourseDto, image);
   }
 
   @Get()
@@ -52,11 +66,13 @@ export class CourseController {
 
   @Put('/:id')
   @Roles(Role.Admin, Role.Editor)
+  @UseInterceptors(FileInterceptor('image'))
   async update(
     @Param('id') id: string,
     @Body() updateCourseDto: UpdateCourseDto,
+    @UploadedFile() image?: CourseImageFile,
   ): Promise<Course> {
-    return await this.courseService.update(id, updateCourseDto);
+    return await this.courseService.update(id, updateCourseDto, image);
   }
 
   @Delete('/:id')

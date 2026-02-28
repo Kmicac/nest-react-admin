@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertTriangle, Loader, X } from 'react-feather';
+import { AlertTriangle, Image as ImageIcon, Loader, X } from 'react-feather';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 
@@ -7,6 +7,7 @@ import useAuth from '../../hooks/useAuth';
 import Course from '../../models/course/Course';
 import UpdateCourseRequest from '../../models/course/UpdateCourseRequest';
 import courseService from '../../services/CourseService';
+import ImageDropzone from '../shared/ImageDropzone';
 import Modal from '../shared/Modal';
 import Table from '../shared/Table';
 import TableItem from '../shared/TableItem';
@@ -23,6 +24,9 @@ export default function CoursesTable({ data, isLoading }: UsersTableProps) {
   const [selectedCourseId, setSelectedCourseId] = useState<string>();
   const [error, setError] = useState<string>();
   const [updateShow, setUpdateShow] = useState<boolean>(false);
+  const [selectedCourseImageUrl, setSelectedCourseImageUrl] = useState<string | null>(null);
+  const [updateCourseImage, setUpdateCourseImage] = useState<File | null>(null);
+  const [removeCourseImage, setRemoveCourseImage] = useState(false);
 
   const {
     register,
@@ -37,8 +41,8 @@ export default function CoursesTable({ data, isLoading }: UsersTableProps) {
       setIsDeleting(true);
       await courseService.delete(selectedCourseId);
       setDeleteShow(false);
-    } catch (error) {
-      setError(error.response.data.message);
+    } catch (error: any) {
+      setError(error?.response?.data?.message ?? 'Error deleting course');
     } finally {
       setIsDeleting(false);
     }
@@ -46,36 +50,61 @@ export default function CoursesTable({ data, isLoading }: UsersTableProps) {
 
   const handleUpdate = async (updateCourseRequest: UpdateCourseRequest) => {
     try {
-      await courseService.update(selectedCourseId, updateCourseRequest);
+      await courseService.update(selectedCourseId, {
+        ...updateCourseRequest,
+        image: updateCourseImage,
+        removeImage: removeCourseImage,
+      });
+
       setUpdateShow(false);
+      setUpdateCourseImage(null);
+      setSelectedCourseImageUrl(null);
+      setRemoveCourseImage(false);
       reset();
-      setError(null);
-    } catch (error) {
-      setError(error.response.data.message);
+      setError(undefined);
+    } catch (error: any) {
+      setError(error?.response?.data?.message ?? 'Error updating course');
     }
   };
 
   return (
     <>
       <div className="table-container">
-        <Table columns={['Name', 'Description', 'Created']}>
+        <Table columns={['Image', 'Name', 'Description', 'Created']}>
           {isLoading
             ? null
-            : data.map(({ id, name, description, dateCreated }) => (
+            : data.map(({ id, name, description, imageUrl, dateCreated }) => (
                 <tr key={id}>
-                  <TableItem>
+                  <TableItem className="w-[110px]">
+                    {imageUrl ? (
+                      <img
+                        src={imageUrl}
+                        alt={name}
+                        className="h-14 w-20 rounded-md border object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="h-14 w-20 rounded-md border bg-gray-100 text-gray-400 flex items-center justify-center">
+                        <ImageIcon size={16} />
+                      </div>
+                    )}
+                  </TableItem>
+                  <TableItem className="w-[220px]">
                     <Link to={`/courses/${id}`}>{name}</Link>
                   </TableItem>
-                  <TableItem>{description}</TableItem>
-                  <TableItem>
+                  <TableItem className="w-[45%]">{description}</TableItem>
+                  <TableItem className="w-[150px] whitespace-nowrap">
                     {new Date(dateCreated).toLocaleDateString()}
                   </TableItem>
-                  <TableItem className="text-right">
+                  <TableItem className="text-right whitespace-nowrap">
                     {['admin', 'editor'].includes(authenticatedUser.role) ? (
                       <button
                         className="text-indigo-600 hover:text-indigo-900 focus:outline-none"
                         onClick={() => {
                           setSelectedCourseId(id);
+                          setSelectedCourseImageUrl(imageUrl ?? null);
+                          setUpdateCourseImage(null);
+                          setRemoveCourseImage(false);
 
                           setValue('name', name);
                           setValue('description', description);
@@ -124,7 +153,7 @@ export default function CoursesTable({ data, isLoading }: UsersTableProps) {
           <button
             className="btn"
             onClick={() => {
-              setError(null);
+              setError(undefined);
               setDeleteShow(false);
             }}
             disabled={isDeleting}
@@ -157,7 +186,10 @@ export default function CoursesTable({ data, isLoading }: UsersTableProps) {
             className="ml-auto focus:outline-none"
             onClick={() => {
               setUpdateShow(false);
-              setError(null);
+              setError(undefined);
+              setUpdateCourseImage(null);
+              setSelectedCourseImageUrl(null);
+              setRemoveCourseImage(false);
               reset();
             }}
           >
@@ -185,6 +217,28 @@ export default function CoursesTable({ data, isLoading }: UsersTableProps) {
             disabled={isSubmitting}
             {...register('description')}
           />
+
+          <ImageDropzone
+            label="Course image"
+            file={updateCourseImage}
+            currentImageUrl={removeCourseImage ? null : selectedCourseImageUrl}
+            onFileChange={(file) => {
+              setUpdateCourseImage(file);
+              setRemoveCourseImage(false);
+            }}
+            onRemoveImage={() => {
+              if (updateCourseImage) {
+                setUpdateCourseImage(null);
+                return;
+              }
+
+              if (selectedCourseImageUrl) {
+                setRemoveCourseImage(true);
+              }
+            }}
+            disabled={isSubmitting}
+          />
+
           <button className="btn" disabled={isSubmitting}>
             {isSubmitting ? (
               <Loader className="animate-spin mx-auto" />

@@ -17,7 +17,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 COPY package.json yarn.lock ormconfig.js ./
-RUN yarn install --production --frozen-lockfile
+RUN yarn install --production --frozen-lockfile && mkdir -p /app/uploads/courses
 
 COPY --from=build /app/dist ./dist
 

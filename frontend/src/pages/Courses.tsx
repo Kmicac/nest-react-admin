@@ -8,6 +8,7 @@ import Layout from '../components/layout';
 import FilterDropdown, {
   FilterDropdownSection,
 } from '../components/shared/FilterDropdown';
+import ImageDropzone from '../components/shared/ImageDropzone';
 import Modal from '../components/shared/Modal';
 import useAuth from '../hooks/useAuth';
 import useDebouncedValue from '../hooks/useDebouncedValue';
@@ -28,6 +29,7 @@ export default function Courses() {
 
   const [addCourseShow, setAddCourseShow] = useState<boolean>(false);
   const [error, setError] = useState<string>();
+  const [addCourseImage, setAddCourseImage] = useState<File | null>(null);
 
   const { authenticatedUser } = useAuth();
 
@@ -127,9 +129,13 @@ export default function Courses() {
 
   const saveCourse = async (createCourseRequest: CreateCourseRequest) => {
     try {
-      await courseService.save(createCourseRequest);
+      await courseService.save({
+        ...createCourseRequest,
+        image: addCourseImage,
+      });
       await queryClient.invalidateQueries('courses');
       setAddCourseShow(false);
+      setAddCourseImage(null);
       reset();
       setError(undefined);
     } catch (error: any) {
@@ -224,6 +230,7 @@ export default function Courses() {
             className="ml-auto focus:outline-none"
             onClick={() => {
               reset();
+              setAddCourseImage(null);
               setAddCourseShow(false);
             }}
           >
@@ -252,6 +259,15 @@ export default function Courses() {
             required
             {...register('description')}
           />
+
+          <ImageDropzone
+            label="Course image"
+            file={addCourseImage}
+            onFileChange={(file) => setAddCourseImage(file)}
+            onRemoveImage={() => setAddCourseImage(null)}
+            disabled={isSubmitting}
+          />
+
           <button className="btn" disabled={isSubmitting}>
             {isSubmitting ? (
               <Loader className="animate-spin mx-auto" />

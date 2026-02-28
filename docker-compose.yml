@@ -41,6 +41,8 @@ services:
       TYPEORM_SYNC: ${TYPEORM_SYNC}
     ports:
       - "5000:5000"
+    volumes:
+      - backend_uploads:/app/uploads
 
   frontend:
     container_name: frontend
@@ -56,3 +58,4 @@ services:
 
 volumes:
   database_data:
+  backend_uploads:

@@ -51,3 +51,4 @@ Thumbs.db
 # Docker Volumes
 database_data/
 docker-data/
+backend/uploads/

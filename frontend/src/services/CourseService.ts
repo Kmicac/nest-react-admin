@@ -5,9 +5,18 @@ import UpdateCourseRequest from '../models/course/UpdateCourseRequest';
 import apiService from './ApiService';
 import { PaginatedResponse } from './UserService';
 
-class UserService {
+class CourseService {
   async save(createCourseRequest: CreateCourseRequest): Promise<void> {
-    await apiService.post('/api/courses', createCourseRequest);
+    const payload = new FormData();
+
+    payload.append('name', createCourseRequest.name);
+    payload.append('description', createCourseRequest.description);
+
+    if (createCourseRequest.image) {
+      payload.append('image', createCourseRequest.image);
+    }
+
+    await apiService.post('/api/courses', payload);
   }
 
   async findAll(courseQuery: CourseQuery): Promise<PaginatedResponse<Course>> {
@@ -39,7 +48,25 @@ class UserService {
     id: string,
     updateCourseRequest: UpdateCourseRequest,
   ): Promise<void> {
-    await apiService.put(`/api/courses/${id}`, updateCourseRequest);
+    const payload = new FormData();
+
+    if (updateCourseRequest.name !== undefined) {
+      payload.append('name', updateCourseRequest.name);
+    }
+
+    if (updateCourseRequest.description !== undefined) {
+      payload.append('description', updateCourseRequest.description);
+    }
+
+    if (updateCourseRequest.image) {
+      payload.append('image', updateCourseRequest.image);
+    }
+
+    if (updateCourseRequest.removeImage !== undefined) {
+      payload.append('removeImage', String(updateCourseRequest.removeImage));
+    }
+
+    await apiService.put(`/api/courses/${id}`, payload);
   }
 
   async delete(id: string): Promise<void> {
@@ -47,4 +74,4 @@ class UserService {
   }
 }
 
-export default new UserService();
+export default new CourseService();

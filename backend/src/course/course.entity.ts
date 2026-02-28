@@ -19,6 +19,9 @@ export class Course extends BaseEntity {
   @Column()
   description: string;
 
+  @Column({ nullable: true })
+  imageUrl?: string;
+
   @Column()
   dateCreated: Date;
 

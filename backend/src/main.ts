@@ -3,7 +3,10 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as bcrypt from 'bcrypt';
 import * as cookieParser from 'cookie-parser';
+import * as express from 'express';
+import { mkdir } from 'fs/promises';
 import * as helmet from 'helmet';
+import { join } from 'path';
 
 import { AppModule } from './app.module';
 import { Role } from './enums/role.enum';
@@ -47,6 +50,10 @@ async function bootstrap() {
       contentSecurityPolicy: false,
     }),
   );
+
+  const uploadsRoot = join(process.cwd(), 'uploads');
+  await mkdir(join(uploadsRoot, 'courses'), { recursive: true });
+  app.use('/api/uploads', express.static(uploadsRoot));
 
   const corsOrigin = process.env.CORS_ORIGIN;
   app.enableCors({
